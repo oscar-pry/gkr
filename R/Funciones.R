@@ -1,17 +1,27 @@
-#' Mi función
+#' Convertir nombres de columnas a mayúsculas
 #'
-#' Esta función realiza una tarea específica.
+#' Esta función toma un data frame y convierte los nombres de las columnas a letras mayúsculas.
 #'
-#' @param x Un vector numérico.
-#' @return El resultado de la función.
+#' @param data Un data frame. El conjunto de datos cuyas columnas se convertirán a mayúsculas.
+#' @return Un nuevo data frame con los mismos datos que el original, pero con los nombres de las columnas en mayúsculas.
+#'
 #' @examples
-#' mi_funcion(1:10)
-mi_funcion <- function(x) {
-  # Implementación de la función
-  return(sum(x))
-}
-
-
+#' # Supongamos que tenemos el siguiente data frame
+#' #   nombre  edad  ciudad
+#' #0  Alice    25  Madrid
+#' #1    Bob    30   Paris
+#' #2  Carol    22  Berlin
+#'
+#' # Llamamos a la función para convertir los nombres de las columnas a mayúsculas
+#' nuevo_df <- convertir_nombres_mayusculas(datos)
+#'
+#' # El nuevo data frame tendrá los nombres de las columnas en mayúsculas
+#' #   NOMBRE  EDAD  CIUDAD
+#' #0  Alice    25  Madrid
+#' #1    Bob    30   Paris
+#' #2  Carol    22  Berlin
+#'
+#' @export
 convertir_nombres_mayusculas <- function(data) {
   nombres_originales <- colnames(data)
   nombres_mayusculas <- toupper(nombres_originales)
@@ -19,8 +29,31 @@ convertir_nombres_mayusculas <- function(data) {
   return(data)
 }
 
-
-
+#' Obtener características de variables en un data frame
+#'
+#' Esta función calcula diversas características de las variables en un data frame y las devuelve en un nuevo data frame.
+#'
+#' @param data Un data frame. El conjunto de datos del cual se obtendrán las características de las variables.
+#' @return Un nuevo data frame que contiene las características de las variables en el conjunto de datos.
+#'
+#' @examples
+#' # Supongamos que tenemos el siguiente data frame
+#' datos <- data.frame(
+#'   edad = c(25, 30, 22),
+#'   altura = c(1.75, 1.68, 1.80),
+#'   ciudad = c("Madrid", "Paris", NA)
+#' )
+#'
+#' # Llamamos a la función para obtener las características de las variables
+#' caracteristicas_df <- consistencia(datos)
+#'
+#' # El nuevo data frame contendrá las características de las variables
+#' #   variable    tipo  media  desviación_estandar  minimo  máximo  valores_únicos  longitud  valores_faltantes  porcentaje_valores_faltantes
+#' #1     edad numeric 25.667            4.163332      22      30               3         3                  0                           0%
+#' #2   altura numeric  1.776            0.057735    1.68    1.80               3         3                  0                           0%
+#' #3   ciudad  factor     NA                 NA    <NA>    <NA>               3         3                  1                     33.333%
+#'
+#' @export
 consistencia <- function(data){
   # Crea un data frame vacío para almacenar las características de las variables
   df <- data.frame(variable = character(),
@@ -64,10 +97,6 @@ consistencia <- function(data){
   return(df)
 }
 
-reemplazar_celdas_vacias <- function(data) {
-  data[data == ""] <- NA
-  return(data)
-}
 
 
 # Función para convertir factores de una base de datos a cadenas de texto
@@ -222,13 +251,13 @@ TEST_lilliefors(iris$Sepal.Width)
 library(data.table)
 
 detectar_valores_ausentes_vacios <- function(data) {
-  # Convertir el dataframe a un objeto de tipo data.table
+  # Convertir el data frame a un objeto de tipo data.table
   dt <- as.data.table(data)
 
   # Calcular la cantidad de valores NA y celdas vacías "" por variable
   conteo_na <- dt[, lapply(.SD, function(x) sum(is.na(x) | x == "")), .SDcols = names(dt)]
 
-  # Convertir el resultado a un dataframe y organizarlo por variables
+  # Convertir el resultado a un data frame y organizarlo por variables
   resultado <- as.data.frame(t(conteo_na))
   colnames(resultado) <- c("NA_Count", "Blank_Count")
 
@@ -274,7 +303,7 @@ detectar_valores_atipicos <- function(data) {
       # Encontrar los índices de filas con valores atípicos
       indices_atipicos <- which(data[[columna]] < (Q1 - 1.5 * IQR) | data[[columna]] > (Q3 + 1.5 * IQR))
 
-      # Almacenar los valores atípicos en el dataframe
+      # Almacenar los valores atípicos en el data frame
       valores_atipicos <- rbind(valores_atipicos, data.frame(Variable = rep(columna, length(indices_atipicos)),
                                                              Indice = indices_atipicos,
                                                              Valor = data[[columna]][indices_atipicos],
