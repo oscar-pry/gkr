@@ -401,6 +401,44 @@ test_shapiro_wilk <- function(data, alpha = 0.05) {
   return(summary)
 }
 
+#' Prueba de Shapiro-Wilk para variables numéricas
+#'
+#' Esta función aplica la prueba de Shapiro-Wilk a todas las variables numéricas
+#' en un conjunto de datos y genera un resumen de los resultados de la prueba
+#' para cada variable.
+#'
+#' @param data Un conjunto de datos en formato de marco de datos.
+#' @param alpha Nivel de significancia para determinar normalidad.
+#' @return Un marco de datos con los resultados de la prueba de Shapiro-Wilk para
+#'   cada variable numérica. Incluye la estadística de la prueba, el valor p y una
+#'   indicación de si los datos son considerados normales o no.
+#' @examples
+#' data <- data.frame(
+#'   var1 = c(1.2, 3.4, 2.1, 4.5, 5.6),
+#'   var2 = c(2.3, 4.5, 1.9, 3.8, 6.7)
+#' )
+#' result <- apply_shapiro_wilk_all(data)
+#' print(result)
+#' @export
+shapiro_wilk_all <- function(data, alpha = 0.05) {
+  # Filtrar las columnas numéricas
+  numeric_columns <- sapply(data, is.numeric)
+
+  # Crear una lista de resúmenes para cada columna numérica
+  results <- lapply(data[, numeric_columns], test_shapiro_wilk, alpha = alpha)
+
+  # Combinar los resultados en un data frame
+  results_df <- data.frame(
+    variable = names(results),
+    statistic = sapply(results, function(x) round(x$statistic, 3)),
+    p_value = sapply(results, function(x) round(x$p_value, 3)),
+    normality = sapply(results, function(x) x$normality)
+  )
+
+  return(results_df)
+}
+
+
 
 #' Prueba de normalidad  de Lilliefors
 #'
@@ -441,65 +479,52 @@ test_lilliefors <- function(data, alpha = 0.05) {
   return(summary)
 }
 
-  #' Prueba de normalidad de Lilliefors para variables numéricas
-  #'
-  #' Esta función realiza la prueba de normalidad de Lilliefors en cada columna numérica del conjunto de datos proporcionado.
-  #'
-  #' @param data Un dataframe o matriz que contiene las variables a ser probadas.
-  #' @param alpha Nivel de significancia para la prueba. El valor predeterminado es 0.05.
-  #'
-  #' @return Un dataframe con los resultados de la prueba de normalidad para cada columna numérica.
-  #' La columna 'Estadistica' contiene los valores de la estadística de prueba,
-  #' la columna 'Valor_p' contiene los valores p asociados,
-  #' y la columna 'Normalidad' indica si la variable se considera normal o no.
-  #'
-  #' @importFrom nortest lillie.test
-  #' @importFrom utils install.packages
-  #'
-  #' @examples
-  #' data <- data.frame(
-  #'   Var1 = rnorm(100),
-  #'   Var2 = rnorm(100),
-  #'   Var3 = rpois(100, lambda = 3)
-  #' )
-  #' result <- test_lilliefors_all(data)
-  #' print(result)
-  #'
-  #' @seealso
-  #' \link{nortest::lillie.test}
-  #'
-  #' @keywords prueba normalidad estadísticas
-  #'
-  #' @export
-  test_lilliefors_all <- function(data, alpha = 0.05) {
-    if (!requireNamespace("nortest", quietly = TRUE)) {
-      install.packages("nortest")
-    }
-
-    library(nortest)
-
-
-    results <- list()
-
-    for (column in colnames(data)) {
-      if (is.numeric(data[[column]])) {
-        # Realiza la prueba de Lilliefors
-        result <- lillie.test(data[[column]])
-
-        # Determina la normalidad
-        normality <- ifelse(result$p.value > alpha, "Es Normal", "No es Normal")
-
-        # Almacena los resultados
-        results[[column]] <- data.frame(Estadistica = result$statistic,
-                                        Valor_p = result$p.value,
-                                        Normalidad = normality,
-                                        stringsAsFactors = FALSE)
-      }
-    }
-
-    results_df <- do.call(rbind, results)
-
-    return(results_df)
+#' Prueba de Lilliefors para todas las variables numéricas
+#'
+#' Esta función aplica la prueba de Lilliefors a todas las variables numéricas
+#' en un conjunto de datos y genera un resumen de los resultados de la prueba
+#' para cada variable.
+#'
+#' @param data Un conjunto de datos en formato de marco de datos.
+#' @param alpha Nivel de significancia para determinar normalidad.
+#' @return Un marco de datos con los resultados de la prueba de Lilliefors para
+#'   cada variable numérica. Incluye la estadística de la prueba, el valor p y una
+#'   indicación de si los datos son considerados normales o no.
+#' @examples
+#' data <- data.frame(
+#'   var1 = c(1.2, 3.4, 2.1, 4.5, 5.6),
+#'   var2 = c(2.3, 4.5, 1.9, 3.8, 6.7)
+#' )
+#' result <- test_lilliefors_all(data)
+#' print(result)
+#' @importFrom nortest lillie.test
+#' @export
+test_lilliefors_all <- function(data, alpha = 0.05) {
+  if (!requireNamespace("nortest", quietly = TRUE)) {
+    install.packages("nortest")
   }
 
+  library(nortest)
 
+  results <- list()
+
+  for (column in colnames(data)) {
+    if (is.numeric(data[[column]])) {
+      # Realiza la prueba de Lilliefors
+      result <- lillie.test(data[[column]])
+
+      # Determina la normalidad
+      normality <- ifelse(result$p.value > alpha, "Es Normal", "No es Normal")
+
+      # Almacena los resultados
+      results[[column]] <- data.frame(Estadistica = round(result$statistic, 3),
+                                      Valor_p = round(result$p.value, 3),
+                                      Normalidad = normality,
+                                      stringsAsFactors = FALSE)
+    }
+  }
+
+  results_df <- do.call(rbind, results)
+
+  return(results_df)
+}
