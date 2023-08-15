@@ -188,23 +188,6 @@ convertir_columnas_a_factores <- function(data_frame, nombres_columnas) {
 }
 
 
-
-# Función para convertir objetos POSIXct de una base de datos a cadenas de texto
-posixct_a_string <- function(data, formato = "%Y-%m-%d %H:%M:%S") {
-  # Obtener los nombres de las columnas
-  columnas <- names(data)
-
-  # Iterar sobre cada columna
-  for (col in columnas) {
-    if (is.POSIXct(data[[col]])) {
-      data[[col]] <- format(data[[col]], formato)
-    }
-  }
-
-  return(data)
-}
-
-
 #' Dicotomiza una variable numérica en función de un umbral
 #'
 #' Esta función toma una variable numérica y un umbral y devuelve una variable
@@ -226,6 +209,69 @@ dicotomizar_variable_num <- function(variable, umbral) {
 
   dicotomizada <- ifelse(variable >= umbral, 1, 0)
   return(dicotomizada)
+}
+
+#' Dicotomizar Variables Categóricas
+#'
+#' Esta función permite dicotomizar variables categóricas (cadenas o factores) en un data frame.
+#'
+#' @param data Un data frame en el que se desea dicotomizar las variables.
+#' @param columnas Un vector de nombres de columnas o factores que se desean dicotomizar.
+#'
+#' @return Un data frame con nuevas columnas dicotomizadas para cada valor único en las columnas especificadas.
+#'
+#' @details La función verifica los argumentos proporcionados y realiza la dicotomización de las variables categóricas. Crea nuevas columnas con valores binarios para cada valor único en las columnas factores.
+#'
+#' @examples
+#' # Crear un data frame de ejemplo
+#' data <- data.frame(
+#'   Genero = c("Masculino", "Femenino", "Masculino", "Femenino"),
+#'   Ciudad = c("A", "B", "A", "C")
+#' )
+#'
+#' # Dicotomizar las variables "Genero" y "Ciudad"
+#' columnas_a_dicotomizar <- c("Genero", "Ciudad")
+#' nuevo_data <- dicotomizar_variables_cat(data, columnas_a_dicotomizar)
+#'
+#' @importFrom base is.data.frame is.character is.factor
+#' @importFrom base lapply paste
+#' @importFrom base levels as.integer
+#' @importFrom base colnames
+#' @importFrom base missing
+#' @importFrom base stop
+#'
+#' @export
+dicotomizar_variables_cat <- function(data, columnas) {
+  if (missing(data) || missing(columnas)) {
+    stop("Todos los argumentos deben ser especificados: data y columnas")
+  }
+
+  if (!is.data.frame(data)) {
+    stop("El primer argumento debe ser un data frame")
+  }
+
+  if (!is.character(columnas) && !is.factor(columnas)) {
+    stop("El segundo argumento debe ser un vector de nombres de columnas o factores")
+  }
+
+  # Convertir columnas a factores si son cadenas
+  if (is.character(columnas)) {
+    data[columnas] <- lapply(data[columnas], factor)
+  }
+
+  # Dicotomizar columnas factores
+  for (col in colnames(data)) {
+    if (col %in% columnas) {
+      unique_vals <- levels(data[[col]])
+
+      for (val in unique_vals) {
+        new_col_name <- paste(col, val, sep = "_")
+        data[[new_col_name]] <- as.integer(data[[col]] == val)
+      }
+    }
+  }
+
+  return(data)
 }
 
 
@@ -527,4 +573,98 @@ test_lilliefors_all <- function(data, alpha = 0.05) {
   results_df <- do.call(rbind, results)
 
   return(results_df)
+}
+
+#' Detectar valores ausentes en un conjunto de datos
+#'
+#' Esta función detecta y reporta la cantidad y el porcentaje de valores ausentes en cada
+#' variable de un conjunto de datos.
+#'
+#' @param data Un data frame o matriz que contiene los datos a analizar.
+#'
+#' @return Un data frame con las siguientes columnas:
+#' \describe{
+#'   \item{Variable}{Nombre de la variable en la que se detectaron valores ausentes.}
+#'   \item{Cantidad_Ausentes}{Cantidad total de valores ausentes en la variable.}
+#'   \item{Porcentaje_Ausentes}{Porcentaje de valores ausentes en la variable (redondeado a 2 decimales).}
+#' }
+#'
+#' @examples
+#' # Crear un data frame de ejemplo
+#' data <- data.frame(
+#'   Col1 = c(1, NA, 3, 4),
+#'   Col2 = c(NA, 2, 3, NA),
+#'   Col3 = c(NA, NA, NA, NA)
+#' )
+#'
+#' # Aplicar la función para detectar valores ausentes
+#' resultados <- detectar_valores_ausentes(data)
+#'
+#' @importFrom base is.na
+#' @importFrom base sum
+#'
+#' @export
+detectar_valores_ausentes <- function(data) {
+  valores_ausentes <- data.frame(Variable = character(),
+                                 Cantidad_Ausentes = integer(),
+                                 Porcentaje_Ausentes = character(),
+                                 stringsAsFactors = FALSE)
+
+  for (columna in colnames(data)) {
+    cantidad_ausentes <- sum(is.na(data[[columna]]) | data[[columna]] == "")
+    total_registros <- length(data[[columna]])
+    porcentaje_ausentes <- paste(round(cantidad_ausentes / total_registros * 100, 2), "%", sep = "")
+
+    valores_atributos <- data.frame(Variable = columna,
+                                    Cantidad_Ausentes = cantidad_ausentes,
+                                    Porcentaje_Ausentes = porcentaje_ausentes,
+                                    stringsAsFactors = FALSE)
+
+    valores_ausentes <- rbind(valores_ausentes, valores_atributos)
+
+  }
+
+  return(valores_ausentes)
+}
+
+#' Reemplazar Valores en una Columna de una Base de Datos
+#'
+#' Esta función permite reemplazar valores en una columna específica de una base de datos.
+#'
+#' @param data Un data frame que representa la base de datos en la que se realizará el reemplazo.
+#' @param columna El nombre de la columna en la que se reemplazarán los valores.
+#' @param valor_original El valor que se desea reemplazar en la columna.
+#' @param valor_nuevo El nuevo valor con el que se reemplazará el valor original.
+#'
+#' @return Un data frame con los valores reemplazados en la columna especificada.
+#'
+#' @details La función busca el valor original en la columna especificada y lo reemplaza por el valor nuevo.
+#'
+#' @examples
+#' # Crear un data frame de ejemplo
+#' data <- data.frame(
+#'   Nombre = c("Ana", "Juan", "María", "Pedro"),
+#'   Edad = c(25, 30, 22, 30)
+#' )
+#'
+#' # Reemplazar el valor 30 en la columna "Edad" por 31
+#' nuevo_data <- reemplazar_valores(data, "Edad", 30, 31)
+#'
+#' @importFrom base colnames
+#' @importFrom base missing
+#' @importFrom base stop
+#'
+#' @export
+reemplazar_valores <- function(data, columna, valor_original, valor_nuevo) {
+  if (missing(data) || missing(columna) || missing(valor_original) || missing(valor_nuevo)) {
+    stop("Todos los argumentos deben ser especificados: data, columna, valor_original y valor_nuevo")
+  }
+
+  if (!columna %in% colnames(data)) {
+    stop("La columna especificada no existe en la base de datos")
+  }
+
+  data[[columna]][data[[columna]] == valor_original] <- valor_nuevo
+
+  return(data)
 }
