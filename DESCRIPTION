@@ -4,7 +4,7 @@ Version: 0.1.0
 Authors@R: 
     person(given = "Oscar", family = "González Frutos", role = c("aut", "cre"), 
     email = "rprojectpy@gmail.com")
-Description: Una descripción breve de tu paquete.
+Description: GKR es un paquete en R diseñado para facilitar y agilizar el proceso de manipulación y preprocesamiento de datos. Proporciona una serie de funciones simples y consistentes que permiten realizar operaciones comunes en conjuntos de datos.
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
