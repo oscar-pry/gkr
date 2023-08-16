@@ -5,32 +5,15 @@
 \title{Estandarizar variables numéricas en una base de datos}
 \usage{
 estandarizar_variables(data)
-
-estandarizar_variables(data)
 }
 \arguments{
 \item{data}{Un objeto de tipo data.frame o tibble que contiene los datos a procesar.}
-
-\item{x}{Un vector numérico que representa la muestra para la cual se quiere realizar
-la prueba de normalidad.}
 }
 \value{
 Un nuevo objeto de tipo data.frame o tibble con las mismas dimensiones que el
   objeto de entrada, pero con las variables numéricas estandarizadas. Las columnas numéricas
   originales son reemplazadas por las versiones estandarizadas y renombradas agregando el
   sufijo "_estandarizada" al nombre original.
-
-Un objeto de clase "htest" que contiene los siguientes componentes:
-  \describe{
-    \item{statistic}{Un vector con el valor de la estadística de prueba. En este caso,
-    el valor corresponde a la máxima discrepancia entre la distribución empírica de los datos
-    y la distribución normal estándar.}
-    \item{p.value}{El valor p asociado a la prueba de normalidad.}
-    \item{method}{Una cadena de texto que indica el método utilizado para la prueba. En este
-    caso, el valor es "Lilliefors (Kolmogorov-Smirnov) normality test".}
-    \item{data.name}{Una cadena de texto que indica el nombre de la variable o muestra para la
-    cual se realizó la prueba.}
-  }
 }
 \description{
 Esta función toma como entrada una base de datos y estandariza las variables numéricas
@@ -38,10 +21,6 @@ presentes en ella. La estandarización consiste en transformar cada variable num
 para que tenga media cero y desviación estándar igual a uno. Esta transformación es útil
 cuando se desean comparar variables que tienen diferentes escalas, ya que coloca todas
 las variables en una misma escala relativa.
-
-Esta función implementa la prueba de normalidad Lilliefors, que es una versión modificada
-del test de Kolmogorov-Smirnov para probar si una muestra proviene de una distribución normal.
-La función calcula la estadística de prueba y el valor p asociado a la prueba.
 }
 \examples{
 data_ejemplo <- data.frame(
@@ -52,9 +31,5 @@ data_ejemplo <- data.frame(
 
 data_ejemplo_estandarizado <- estandarizar_variables(data_ejemplo)
 str(data_ejemplo_estandarizado)
-
-data_ejemplo <- c(2.3, 3.1, 2.8, 3.5, 2.6, 2.9, 3.3, 2.7, 3.0, 3.4)
-resultado_prueba <- TEST_lilliefors(data_ejemplo)
-print(resultado_prueba)
 
 }
