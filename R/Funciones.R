@@ -318,54 +318,6 @@ estandarizar_variables <- function(data) {
   return(data)
 }
 
-#' Prueba de normalidad Lilliefors (Kolmogorov-Smirnov) en una muestra
-#'
-#' Esta función implementa la prueba de normalidad Lilliefors, que es una versión modificada
-#' del test de Kolmogorov-Smirnov para probar si una muestra proviene de una distribución normal.
-#' La función calcula la estadística de prueba y el valor p asociado a la prueba.
-#'
-#' @param x Un vector numérico que representa la muestra para la cual se quiere realizar
-#'   la prueba de normalidad.
-#'
-#' @return Un objeto de clase "htest" que contiene los siguientes componentes:
-#'   \describe{
-#'     \item{statistic}{Un vector con el valor de la estadística de prueba. En este caso,
-#'     el valor corresponde a la máxima discrepancia entre la distribución empírica de los datos
-#'     y la distribución normal estándar.}
-#'     \item{p.value}{El valor p asociado a la prueba de normalidad.}
-#'     \item{method}{Una cadena de texto que indica el método utilizado para la prueba. En este
-#'     caso, el valor es "Lilliefors (Kolmogorov-Smirnov) normality test".}
-#'     \item{data.name}{Una cadena de texto que indica el nombre de la variable o muestra para la
-#'     cual se realizó la prueba.}
-#'   }
-#'
-#' @examples
-#' data_ejemplo <- c(2.3, 3.1, 2.8, 3.5, 2.6, 2.9, 3.3, 2.7, 3.0, 3.4)
-#' resultado_prueba <- TEST_lilliefors(data_ejemplo)
-#' print(resultado_prueba)
-#'
-#' @importFrom stats pnorm
-#' @export
-#'
-
-estandarizar_variables <- function(data) {
-  # Filtrar las columnas numéricas
-  columnas_numericas <- sapply(data, is.numeric)
-  data_numericas <- data[, columnas_numericas]
-
-  # Estandarizar las variables numéricas
-  data_estandarizada <- scale(data_numericas)
-
-  # Renombrar las columnas estandarizadas
-  nombres_columnas <- colnames(data_numericas)
-  nuevos_nombres <- paste0(nombres_columnas, "_estandarizada")
-  colnames(data_estandarizada) <- nuevos_nombres
-
-  # Reemplazar las columnas numéricas originales por las estandarizadas
-  data[, columnas_numericas] <- data_estandarizada
-
-  return(data)
-}
 
 #' Detectar Valores Atípicos en Variables Numéricas
 #'
@@ -655,6 +607,7 @@ detectar_valores_ausentes <- function(data) {
 #' @importFrom base stop
 #'
 #' @export
+
 reemplazar_valores <- function(data, columna, valor_original, valor_nuevo) {
   if (missing(data) || missing(columna) || missing(valor_original) || missing(valor_nuevo)) {
     stop("Todos los argumentos deben ser especificados: data, columna, valor_original y valor_nuevo")
@@ -668,3 +621,111 @@ reemplazar_valores <- function(data, columna, valor_original, valor_nuevo) {
 
   return(data)
 }
+
+
+#' Calcular Kurtosis y Skewness con Gráficos
+#'
+#' Esta función calcula la kurtosis y skewness de un vector de datos numéricos
+#' y genera histogramas y boxplots para visualización. También determina si los
+#' datos se desvían de una distribución normal basándose en umbrales predefinidos.
+#'
+#' @param data Un vector numérico o un data frame que contiene los datos a analizar.
+#' @return Un data frame que contiene la kurtosis, skewness y si los datos se desvían
+#'         de una distribución normal para cada variable.
+#' @export
+#' @importFrom moments kurtosis skewness
+#' @importFrom ggplot2 ggplot geom_histogram geom_boxplot labs theme_minimal
+#' @examples
+#' data <-  c(2.3, 1.5, 3.7, 2.8, 4.2, 5.6)
+#'
+#' calculate_kurtosis_skewness(data)
+calculate_kurtosis_skewness <- function(data) {
+  if (!requireNamespace("moments", quietly = TRUE)) {
+    install.packages("moments")
+  }
+  if (!requireNamespace("ggplot2", quietly = TRUE)) {
+    install.packages("ggplot2")
+  }
+  if (!requireNamespace("dplyr", quietly = TRUE)) {
+    install.packages("dplyr")
+  }
+  library(moments)
+  library(ggplot2)
+  library(dplyr)
+
+  kurt <- kurtosis(data)
+  skew <- skewness(data)
+
+  hist_plot <- ggplot(data.frame(x = data), aes(x)) +
+    geom_histogram(binwidth = 0.5, fill = "lightblue", color = "black") +
+    labs(title = "Histograma", x = "Valor") +
+    theme_minimal()
+
+  boxplot_plot <- ggplot(data.frame(x = data), aes(y = x)) +
+    geom_boxplot(fill = "lightgreen") +
+    labs(title = "Diagrama de Caja", y = "Valor") +
+    theme_minimal()
+
+  normal_test <- ifelse(abs(skew) > 2 | abs(kurt - 3) > 2, "Sí", "No")
+
+  result_df <- data.frame(
+    Kurtosis = kurt,
+    Skewness = skew,
+    SeDesvíaDeNormal = normal_test
+  )
+
+  cat("Kurtosis:", kurt, "\n")
+  cat("Skewness:", skew, "\n")
+  cat("Se desvía de la Distribución Normal:", normal_test, "\n")
+
+  print(hist_plot)
+  print(boxplot_plot)
+
+  return(result_df)
+}
+
+
+#' Calcular Kurtosis y Skewness para Todas las Variables Numéricas
+#'
+#' Esta función toma un data frame y calcula la kurtosis y skewness de todas las variables
+#' numéricas en él. Además, genera histogramas y boxplots para visualizar las distribuciones
+#' de las variables numéricas y determina si los datos se desvían de una distribución normal.
+#'
+#' @param data Un data frame que contiene las variables a analizar.
+#' @return Un data frame que contiene la kurtosis, skewness y si los datos se desvían
+#'         de una distribución normal para cada variable numérica.
+#' @export
+#' @importFrom moments kurtosis skewness
+#' @importFrom ggplot2 ggplot geom_histogram geom_boxplot labs theme_minimal
+#' @importFrom dplyr select_if bind_rows
+#' @examples
+#' data <- data.frame(
+#'   var1 = c(2.3, 1.5, 3.7, 2.8, 4.2, 5.6),
+#'   var2 = c(7.8, 6.4, 8.2, 7.1, 9.5, 10.2),
+#'   var3 = c(12.1, 14.8, 15.6, 13.2, 16.7, 11.9)
+#' )
+#' calculate_kurtosis_skewness_all(data)
+calculate_kurtosis_skewness_all <- function(data) {
+  if (!requireNamespace("moments", quietly = TRUE)) {
+    install.packages("moments")
+  }
+  if (!requireNamespace("ggplot2", quietly = TRUE)) {
+    install.packages("ggplot2")
+  }
+  if (!requireNamespace("dplyr", quietly = TRUE)) {
+    install.packages("dplyr")
+  }
+  library(moments)
+  library(ggplot2)
+  library(dplyr)
+
+  numeric_vars <- data %>%
+    select_if(is.numeric)
+
+  results_list <- lapply(numeric_vars, calculate_kurtosis_skewness)
+
+  combined_results <- bind_rows(results_list, .id = "Variable")
+
+  return(combined_results)
+}
+
