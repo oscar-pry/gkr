@@ -1,6 +1,6 @@
 Package: GKR
 Title: GKR
-Version: 0.1.0
+Version: 1.0.0
 Authors@R: 
     person(given = "Oscar", family = "González Frutos", role = c("aut", "cre"), 
     email = "rprojectpy@gmail.com")
