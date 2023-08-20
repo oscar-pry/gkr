@@ -346,8 +346,8 @@ detectar_valores_atipicos <- function(data) {
   for (columna in colnames(data)) {
     if (is.numeric(data[[columna]])) {
       # Calcular los límites para detectar valores atípicos
-      Q1 <- quantile(data[[columna]], 0.25)
-      Q3 <- quantile(data[[columna]], 0.75)
+      Q1 <- quantile(data[[columna]], 0.25, na.rm=TRUE)
+      Q3 <- quantile(data[[columna]], 0.75, na.rm=TRUE)
       IQR <- Q3 - Q1
 
       # Encontrar los índices de filas con valores atípicos
